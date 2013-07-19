@@ -144,28 +144,6 @@ describe MopedMapping do
     end
   end
 
-  # describe :convertToCapped  do
-  #   it "actual usage" do
-  #     MopedMapping.collection_map(@database_name,{"items" => "items@2" })
-  #     MopedMapping.enable
-  #     @session.collection_names.should =~ %w[items items@1 items@2 items@3]
-  #     @session.command("convertToCapped" => "items", "size" => 1024 * 1024)
-  #     # Moped::Collection#capped? が collstats からcappedかどうかを判断しようとしているが、
-  #     # collStatsの戻り値にはcappedという属性はないので、正しく確認ができない
-  #     # http://docs.mongodb.org/manual/reference/command/collStats/#dbcmd.collStats
-  #     @session["items"].capped?.should == true
-  #     @session["items@2"].capped?.should == true
-  #     MopedMapping.collection_map(@database_name,{"items" => "items@3", "products" => "products@3" }) do
-  #       @session.command("convertToCapped" => "items", "size" => 1024 * 1024)
-  #       @session["items"].capped?.should == true
-  #       @session["items@3"].capped?.should == true
-  #     end
-  #     @session["items@1"].capped?.should_not == true
-  #     @session["items@2"].capped?.should == true
-  #     @session["items@3"].capped?.should == true
-  #   end
-  # end
-
 
   describe :distinct do
     it "actual usage" do
