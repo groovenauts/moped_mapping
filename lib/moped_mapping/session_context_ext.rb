@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require 'moped_mapping'
 
 module MopedMapping
@@ -16,10 +17,29 @@ module MopedMapping
       return query_without_mapping(database, collection, selector, options, &block)
     end
 
-    COMMAND_NAMES = %w[drop count].map(&:to_sym).freeze
+    # MongoDBのコマンド一覧
+    # http://docs.mongodb.org/manual/reference/command/
+
+    # MongoDBのコマンドのうち、コレクションを対象としたコマンド名
+    COLLECTION_COMMAND_NAMES = %w[
+      # #aggregation-commands
+      count aggregate distinct group # mapReduce
+      # #geospatial-commands
+      geoNear geoSearch geoWalk
+      # #query-and-write-operation-commands
+      findAndModify text
+      # #replication-commands
+      # #sharding-commands
+      shardCollection
+      # #instance-administration-commands
+      renameCollection drop create cloneCollection cloneCollectionAsCapped convertToCapped
+      dropIndexes compact collMod reIndex
+      # #diagnostic-commands
+      collStats validate serverStatus
+    ].map(&:to_sym).freeze
 
     def command_with_mapping(database, command, &block)
-      COMMAND_NAMES.each do |name|
+      COLLECTION_COMMAND_NAMES.each do |name|
         next unless command.key?(name)
         command[name] = MopedMapping.mapped_name(database, command[name])
       end
