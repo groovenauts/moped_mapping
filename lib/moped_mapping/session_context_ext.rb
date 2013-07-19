@@ -21,7 +21,7 @@ module MopedMapping
     # http://docs.mongodb.org/manual/reference/command/
 
     # MongoDBのコマンドのうち、コレクションを対象としたコマンド名
-    COLLECTION_COMMAND_NAMES = %w[
+    collection_command_names = %w[
       # #aggregation-commands
       count aggregate distinct # group # mapReduce
       # #geospatial-commands
@@ -36,7 +36,10 @@ module MopedMapping
       dropIndexes compact collMod reIndex
       # #diagnostic-commands
       collStats validate serverStatus
-    ].map(&:to_sym).freeze
+    ].map(&:freeze).freeze
+
+    # 文字列とSymbolの両方
+    COLLECTION_COMMAND_NAMES = (collection_command_names + collection_command_names.map(&:to_sym)).freeze
 
     def command_with_mapping(database, command, &block)
       COLLECTION_COMMAND_NAMES.each do |name|

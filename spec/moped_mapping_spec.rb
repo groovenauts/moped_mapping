@@ -83,6 +83,20 @@ describe MopedMapping do
     end
   end
 
+  describe :create do
+    it "actual usage" do
+      MopedMapping.collection_map(@database_name,{"items" => "items@4" })
+      MopedMapping.enable
+      @session.collection_names.should =~ %w[items items@1 items@2 items@3]
+      @session.command("create" => "items")
+      @session.collection_names.should =~ %w[items items@1 items@2 items@3 items@4]
+      MopedMapping.collection_map(@database_name,{"items" => "items@5" }) do
+        @session.command("create" => "items")
+        @session.collection_names.should =~ %w[items items@1 items@2 items@3 items@4 items@5]
+      end
+    end
+  end
+
   describe :drop do
     it "actual usage" do
       MopedMapping.collection_map(@database_name,{"items" => "items@2" })
