@@ -11,27 +11,28 @@ describe MopedMapping do
   end
 
   before do
-    @session = Moped::Sessoin.new(config[:sessions][:default])
-    @database = @session.database
-    @database.tap do |d|
+    @session = Moped::Session.new(config[:sessions][:default][:hosts])
+    @database_name = config[:sessions][:default][:database]
+    @session.use(@database_name)
+    @session.tap do |s|
       # コレクションの削除
-      d.collection_names.each{|col| d[col].drop }
+      s.collection_names.each{|col| s[col].drop }
       # テスト用のデータの追加
-      d["items"].tap do |c|
+      s["items"].tap do |c|
         c.insert(name: "foo", price: 100)
       end
-      d["items_1"].tap do |c|
+      s["items_1"].tap do |c|
         c.insert(name: "foo", price: 100)
         c.insert(name: "bar", price: 200)
         c.insert(name: "baz", price: 400)
       end
-      d["items_2"].tap do |c|
+      s["items_2"].tap do |c|
         c.insert(name: "foo", price:  80)
         c.insert(name: "bar", price: 180)
         c.insert(name: "baz", price: 350)
         c.insert(name: "qux", price: 150)
       end
-      d["items_3"].tap do |c|
+      s["items_3"].tap do |c|
         c.insert(name: "bar", price: 180)
         c.insert(name: "baz", price: 350)
         c.insert(name: "qux", price: 150)
@@ -41,7 +42,7 @@ describe MopedMapping do
 
   describe :enable do
     it "with block" do
-      MopedMapping.collection_map(@database.name,{"items" => "items_1" })
+      MopedMapping.collection_map(@database_name,{"items" => "items_1" })
       col = @database["items"]
       col.find.sort(price: -1).one["name"].should == "foo"
       col.count.should == 1
@@ -54,7 +55,7 @@ describe MopedMapping do
     end
 
     it "without block" do
-      MopedMapping.collection_map(@database.name,{"items" => "items_1" })
+      MopedMapping.collection_map(@database_name,{"items" => "items_1" })
       col = @database["items"]
       col.find.sort(price: -1).one["name"].should == "foo"
       col.count.should == 1
@@ -70,12 +71,12 @@ describe MopedMapping do
 
   describe :collection_map do
     it "actually usage" do
-      MopedMapping.collection_map(@database.name,{"items" => "items_2" })
+      MopedMapping.collection_map(@database_name,{"items" => "items_2" })
       MopedMapping.enable
       col = @database["items"]
       col.find.sort(price: -1).one["name"].should == "qux"
       col.count.should == 4
-      MopedMapping.collection_map(@database.name,{"items" => "items_3" }) do
+      MopedMapping.collection_map(@database_name,{"items" => "items_3" }) do
         col.find.sort(price: -1).one["name"].should == "qux"
         col.count.should == 3
       end

@@ -1,5 +1,6 @@
 require "moped_mapping/version"
 
+require 'moped'
+
 module MopedMapping
-  # Your code goes here...
 end
