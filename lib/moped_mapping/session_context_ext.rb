@@ -23,11 +23,11 @@ module MopedMapping
     # MongoDBのコマンドのうち、コレクションを対象としたコマンド名
     COLLECTION_COMMAND_NAMES = %w[
       # #aggregation-commands
-      count aggregate distinct group # mapReduce
+      count aggregate distinct # group # mapReduce
       # #geospatial-commands
       geoNear geoSearch geoWalk
       # #query-and-write-operation-commands
-      findAndModify text
+      findAndModify # text
       # #replication-commands
       # #sharding-commands
       shardCollection
