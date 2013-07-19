@@ -182,11 +182,15 @@ describe MopedMapping do
       MopedMapping.enable
       col = @session["items"]
       col.indexes.create({name: 1}, {name: "items_2_name"})
-      col.indexes[{"name" => 1}]["name"].should == "items_2_name"
+      %w[items items@2].each do |col_name|
+        col.indexes[{"name" => 1}]["name"].should == "items_2_name"
+      end
 
       MopedMapping.collection_map(@database_name,{"items" => "items@3" }) do
         col.indexes.create({"name" => 1}, {name: "items_3_name"})
-        col.indexes[{"name" => 1}]["name"].should == "items_3_name"
+        %w[items items@2].each do |col_name|
+          col.indexes[{"name" => 1}]["name"].should == "items_3_name"
+        end
       end
 
       %w[items items@2].each do |col_name|
