@@ -222,7 +222,6 @@ describe MopedMapping do
           col.indexes.to_a.map{|idx| idx["name"]}.should =~ ["_id_", "items@3_name"]
         end
       end
-      
     end
   end
 

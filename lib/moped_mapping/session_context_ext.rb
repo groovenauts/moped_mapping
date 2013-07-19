@@ -37,7 +37,7 @@ module MopedMapping
       :deleteIndexes,
 
       # #diagnostic-commands
-      :collStats, :validate, :serverStatus,
+      :collStats, :validate
     ].freeze
 
     COLLECTION_COMMAND_NAMES = (collection_command_names + collection_command_names.map(&:to_s).map(&:freeze)).freeze
