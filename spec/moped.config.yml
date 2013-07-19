@@ -1,0 +1,6 @@
+test:
+  sessions:
+    default:
+      database: moped_mapping_test
+      hosts:
+        - localhost:27017
