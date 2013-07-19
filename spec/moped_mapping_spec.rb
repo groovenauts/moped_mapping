@@ -21,18 +21,18 @@ describe MopedMapping do
       s["items"].tap do |c|
         c.insert(name: "foo", price: 100)
       end
-      s["items_1"].tap do |c|
+      s["items@1"].tap do |c|
         c.insert(name: "foo", price: 100)
         c.insert(name: "bar", price: 200)
         c.insert(name: "baz", price: 400)
       end
-      s["items_2"].tap do |c|
+      s["items@2"].tap do |c|
         c.insert(name: "foo", price:  80)
         c.insert(name: "bar", price: 180)
         c.insert(name: "baz", price: 350)
         c.insert(name: "qux", price: 150)
       end
-      s["items_3"].tap do |c|
+      s["items@3"].tap do |c|
         c.insert(name: "bar", price: 180)
         c.insert(name: "baz", price: 350)
         c.insert(name: "qux", price: 400)
@@ -42,7 +42,7 @@ describe MopedMapping do
 
   describe :enable do
     it "with block" do
-      MopedMapping.collection_map(@database_name,{"items" => "items_1" })
+      MopedMapping.collection_map(@database_name,{"items" => "items@1" })
       col = @session["items"]
       col.find.sort(price: -1).one["name"].should == "foo"
       col.find.count.should == 1
@@ -55,7 +55,7 @@ describe MopedMapping do
     end
 
     it "without block" do
-      MopedMapping.collection_map(@database_name,{"items" => "items_1" })
+      MopedMapping.collection_map(@database_name,{"items" => "items@1" })
       col = @session["items"]
       col.find.sort(price: -1).one["name"].should == "foo"
       col.find.count.should == 1
@@ -71,15 +71,30 @@ describe MopedMapping do
 
   describe :collection_map do
     it "actual usage" do
-      MopedMapping.collection_map(@database_name,{"items" => "items_2" })
+      MopedMapping.collection_map(@database_name,{"items" => "items@2" })
       MopedMapping.enable
       col = @session["items"]
       col.find.sort(price: -1).one["name"].should == "baz"
       col.find.count.should == 4
-      MopedMapping.collection_map(@database_name,{"items" => "items_3" }) do
+      MopedMapping.collection_map(@database_name,{"items" => "items@3" }) do
         col.find.sort(price: -1).one["name"].should == "qux"
         col.find.count.should == 3
       end
+    end
+  end
+
+  describe :drop do
+    it "actual usage" do
+      MopedMapping.collection_map(@database_name,{"items" => "items@2" })
+      MopedMapping.enable
+      @session.collection_names.should =~ %w[items items@1 items@2 items@3]
+      col = @session["items"]
+      MopedMapping.collection_map(@database_name,{"items" => "items@3" }) do
+        col.drop
+        @session.collection_names.should =~ %w[items items@1 items@2]
+      end
+      col.drop
+      @session.collection_names.should =~ %w[items items@1]
     end
   end
 
