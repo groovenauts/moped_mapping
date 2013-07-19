@@ -173,4 +173,26 @@ describe MopedMapping do
     end
   end
 
+
+
+
+  describe :create_index do
+    it "actual usage" do
+      MopedMapping.collection_map(@database_name,{"items" => "items@2" })
+      MopedMapping.enable
+      col = @session["items"]
+      col.indexes.create({name: 1}, {name: "items_2_name"})
+      col.indexes[{"name" => 1}]["name"].should == "items_2_name"
+
+      MopedMapping.collection_map(@database_name,{"items" => "items@3" }) do
+        col.indexes.create({"name" => 1}, {name: "items_3_name"})
+        col.indexes[{"name" => 1}]["name"].should == "items_3_name"
+      end
+
+      %w[items items@2].each do |col_name|
+        col.indexes[{"name" => 1}]["name"].should == "items_2_name"
+      end
+    end
+  end
+
 end
