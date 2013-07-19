@@ -34,6 +34,7 @@ module MopedMapping
       # #instance-administration-commands
       :drop, :create, # :convertToCapped,
       :dropIndexes, :compact, :collMod, :reIndex,
+      :deleteIndexes,
 
       # #diagnostic-commands
       :collStats, :validate, :serverStatus,

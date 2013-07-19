@@ -11,6 +11,7 @@ describe MopedMapping do
   end
 
   before do
+    MopedMapping.disable
     @session = Moped::Session.new(config[:sessions][:default][:hosts])
     @database_name = config[:sessions][:default][:database]
     @session.use(@database_name)
@@ -196,6 +197,32 @@ describe MopedMapping do
       %w[items items@2].each do |col_name|
         col.indexes[{"name" => 1}]["name"].should == "items_2_name"
       end
+    end
+  end
+
+  describe :drop_index do
+    it "actual usage" do
+      %w[items items@1 items@2 items@3].each do |col_name|
+        col = @session[col_name]
+        col.indexes.create({name: 1}, {name: "#{col_name}_name"})
+        col.indexes.create({price: 1}, {name: "#{col_name}_price"})
+      end
+
+      MopedMapping.collection_map(@database_name,{"items" => "items@2" })
+      MopedMapping.enable
+      col = @session["items"]
+      col.indexes.drop({"name" => 1})
+      %w[items items@2].each do |col_name|
+        col.indexes.to_a.map{|idx| idx["name"]}.should =~ ["_id_", "items@2_price"]
+      end
+      MopedMapping.collection_map(@database_name,{"items" => "items@3" }) do
+        col = @session["items"]
+        col.indexes.drop({"price" => 1})
+        %w[items items@3].each do |col_name|
+          col.indexes.to_a.map{|idx| idx["name"]}.should =~ ["_id_", "items@3_name"]
+        end
+      end
+      
     end
   end
 
