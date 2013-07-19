@@ -41,15 +41,15 @@ module MopedMapping
 
     COLLECTION_COMMAND_NAMES = (collection_command_names + collection_command_names.map(&:to_s).map(&:freeze)).freeze
 
-    command_args_array = [
-      # [:cloneCollection, :from], # このfromはホスト名を指定するので、対象外
-      [:cloneCollectionAsCapped, :toCollection],
-    ].map(&:freeze).freeze
+    # command_args_array = [
+    #   # [:cloneCollection, :from], # このfromはホスト名を指定するので、対象外
+    #   # [:cloneCollectionAsCapped, :toCollection], # テストを実装できないので対象外。
+    # ].map(&:freeze).freeze
 
-    COMMAND_ARGS_ARRAY = (
-      command_args_array +
-      command_args_array.map{|args| args.map(&:to_s).map(&:freeze).freeze }
-    ).freeze
+    # COMMAND_ARGS_ARRAY = (
+    #   command_args_array +
+    #   command_args_array.map{|args| args.map(&:to_s).map(&:freeze).freeze }
+    # ).freeze
 
     full_name_command_names = [
       :renameCollection, :to
@@ -65,16 +65,16 @@ module MopedMapping
         done = true
         break
       end
-      unless done
-        COMMAND_ARGS_ARRAY.each do |args|
-          next unless command.key?(args.first)
-          args.each do |arg|
-            command[arg] = MopedMapping.mapped_name(database, command[arg])
-          end
-          done = true
-          break
-        end
-      end
+      # unless done
+      #   COMMAND_ARGS_ARRAY.each do |args|
+      #     next unless command.key?(args.first)
+      #     args.each do |arg|
+      #       command[arg] = MopedMapping.mapped_name(database, command[arg])
+      #     end
+      #     done = true
+      #     break
+      #   end
+      # end
       unless done
         FULL_NAME_COMMAND_NAMES.each do |name|
           next unless command.key?(name)
