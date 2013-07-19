@@ -98,4 +98,32 @@ describe MopedMapping do
     end
   end
 
+  describe :distinct do
+    it "actual usage" do
+      MopedMapping.collection_map(@database_name,{"items" => "items@2" })
+      MopedMapping.enable
+      col = @session["items"]
+      col.find.distinct(:name).should =~ %w[foo bar baz qux]
+      MopedMapping.collection_map(@database_name,{"items" => "items@3" }) do
+        col.find.distinct(:name).should =~ %w[bar baz qux]
+      end
+      col.find.distinct(:name).should =~ %w[foo bar baz qux]
+    end
+  end
+
+  describe :findAndModify do
+    it "actual usage" do
+      MopedMapping.collection_map(@database_name,{"items" => "items@2" })
+      MopedMapping.enable
+      col = @session["items"]
+      col.find(name: "bar").modify({"$set" => {price: 190}})
+      col.find(name: "bar").one["price"].should == 190
+      MopedMapping.collection_map(@database_name,{"items" => "items@3" }) do
+        col.find(name: "bar").modify({"$set" => {price: 200}})
+        col.find(name: "bar").one["price"].should == 200
+      end
+      col.find(name: "bar").one["price"].should == 190
+    end
+  end
+
 end
