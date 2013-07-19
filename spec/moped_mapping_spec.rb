@@ -35,7 +35,7 @@ describe MopedMapping do
       s["items_3"].tap do |c|
         c.insert(name: "bar", price: 180)
         c.insert(name: "baz", price: 350)
-        c.insert(name: "qux", price: 150)
+        c.insert(name: "qux", price: 400)
       end
     end
   end
@@ -43,42 +43,42 @@ describe MopedMapping do
   describe :enable do
     it "with block" do
       MopedMapping.collection_map(@database_name,{"items" => "items_1" })
-      col = @database["items"]
+      col = @session["items"]
       col.find.sort(price: -1).one["name"].should == "foo"
-      col.count.should == 1
+      col.find.count.should == 1
       MopedMapping.enable do
         col.find.sort(price: -1).one["name"].should == "baz"
-        col.count.should == 3
+        col.find.count.should == 3
       end
       col.find.sort(price: -1).one["name"].should == "foo"
-      col.count.should == 1
+      col.find.count.should == 1
     end
 
     it "without block" do
       MopedMapping.collection_map(@database_name,{"items" => "items_1" })
-      col = @database["items"]
+      col = @session["items"]
       col.find.sort(price: -1).one["name"].should == "foo"
-      col.count.should == 1
+      col.find.count.should == 1
       MopedMapping.enable
       col.find.sort(price: -1).one["name"].should == "baz"
-      col.count.should == 3
+      col.find.count.should == 3
       MopedMapping.disable
       col.find.sort(price: -1).one["name"].should == "foo"
-      col.count.should == 1
+      col.find.count.should == 1
     end
   end
 
 
   describe :collection_map do
-    it "actually usage" do
+    it "actual usage" do
       MopedMapping.collection_map(@database_name,{"items" => "items_2" })
       MopedMapping.enable
-      col = @database["items"]
-      col.find.sort(price: -1).one["name"].should == "qux"
-      col.count.should == 4
+      col = @session["items"]
+      col.find.sort(price: -1).one["name"].should == "baz"
+      col.find.count.should == 4
       MopedMapping.collection_map(@database_name,{"items" => "items_3" }) do
         col.find.sort(price: -1).one["name"].should == "qux"
-        col.count.should == 3
+        col.find.count.should == 3
       end
     end
   end
