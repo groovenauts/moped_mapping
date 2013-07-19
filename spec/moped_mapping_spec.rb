@@ -112,6 +112,24 @@ describe MopedMapping do
     end
   end
 
+
+  describe :renameCollection do
+    it "actual usage" do
+      MopedMapping.collection_map(@database_name,{"items" => "items@2", "products" => "products@2" })
+      MopedMapping.enable
+      @session.collection_names.should =~ %w[items items@1 items@2 items@3]
+      # renameCollection では単なるコレクション名ではなく、 <ネームスペース名>.<コレクション名> を指定する必要があります
+      @session.with(database: :admin).command("renameCollection" => "#{@database_name}.items", "to" => "#{@database_name}.products")
+      @session.collection_names.should =~ %w[items items@1 products@2 items@3]
+      MopedMapping.collection_map(@database_name,{"items" => "items@3", "products" => "products@3" }) do
+        @session.with(database: :admin).command("renameCollection" => "#{@database_name}.items", "to" => "#{@database_name}.products")
+        @session.collection_names.should =~ %w[items items@1 products@2 products@3]
+      end
+      @session.collection_names.should =~ %w[items items@1 products@2 products@3]
+    end
+  end
+
+
   describe :distinct do
     it "actual usage" do
       MopedMapping.collection_map(@database_name,{"items" => "items@2" })

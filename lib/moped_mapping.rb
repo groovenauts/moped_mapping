@@ -36,6 +36,16 @@ module MopedMapping
     return mapping[collection] || collection
   end
 
+  def mapped_full_name(database, collection)
+    return collection unless MopedMapping.enabled
+    db, col = collection.split(/\./, 2)
+    return collection unless col
+    mapping = db_collection_map[db]
+    return collection unless mapping
+    mapped = mapping[col]
+    mapped ? "#{db}.#{mapped}" : collection
+  end
+
   def collection_map(db_name, mapping)
     if block_given?
       bak, db_collection_map[db_name] = db_collection_map[db_name], mapping
