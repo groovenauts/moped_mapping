@@ -35,13 +35,6 @@ describe MopedMapping do
           c.insert(num: 4, loc: [10, 20])
           c.indexes.create({loc: "2d"})
         end
-        s["points@3"].tap do |c|
-          c.insert(num: 1, loc: [ 0,  0])
-          c.insert(num: 2, loc: [10, 10])
-          c.insert(num: 3, loc: [ 6,  7])
-          c.insert(num: 4, loc: [10,  5])
-          c.indexes.create({loc: "2d"})
-        end
       end
     end
 
@@ -72,6 +65,70 @@ describe MopedMapping do
         r = @session.command("geoNear" => "points", "near" => target)
         r["ok"].should == 1
         r["results"].map{|d| d["obj"]["num"]}.should == [2,3,1,4]
+      end
+    end
+  end
+
+  describe "Haystack index" do
+
+    # see http://docs.mongodb.org/manual/core/geohaystack/
+    before do
+      MopedMapping.disable
+      @session = Moped::Session.new(config[:sessions][:default][:hosts])
+      @database_name = config[:sessions][:default][:database]
+      @session.use(@database_name)
+      @session.tap do |s|
+        # コレクションの削除
+        s.collection_names.each{|col| s[col].drop }
+        # テスト用のデータの追加
+        s["places@1"].tap do |c|
+          c.insert({ _id: 100, pos: { lng: 126.9, lat: 35.2 } , type: "restaurant"})
+          c.insert({ _id: 200, pos: { lng: 127.5, lat: 36.1 } , type: "restaurant"})
+          c.insert({ _id: 300, pos: { lng: 128.0, lat: 36.7 } , type: "national park"})
+          c.indexes.create({pos: "geoHaystack", type: 1}, { bucketSize: 1 } )
+        end
+        s["places@2"].tap do |c|
+          c.insert({ _id: 100, pos: { lng: 106.9, lat: 25.2 } , type: "restaurant"})
+          c.insert({ _id: 200, pos: { lng: 127.5, lat: 36.1 } , type: "restaurant"})
+          c.insert({ _id: 300, pos: { lng: 128.0, lat: 36.7 } , type: "national park"})
+          c.indexes.create({pos: "geoHaystack", type: 1}, { bucketSize: 1 } )
+        end
+      end
+    end
+
+    describe :geoSearch do
+      it do
+        MopedMapping.collection_map(@database_name,{"places" => "places@1" })
+        MopedMapping.enable
+        target = [127.1, 35.6]
+        # {
+        #   "results"=>[
+        #     {"_id"=>100, "pos"=>{"lng"=>126.9, "lat"=>35.2}, "type"=>"restaurant"},
+        #     {"_id"=>200, "pos"=>{"lng"=>127.5, "lat"=>36.1}, "type"=>"restaurant"}
+        #   ],
+        #   "stats"=>{"time"=>3, "btreeMatches"=>2, "n"=>2},
+        #   "ok"=>1.0
+        # }
+        r = @session.command({geoSearch: "places",
+                     search: { type: "restaurant" },
+                     near: target,
+                     maxDistance: 10 })
+        r["ok"].should == 1
+        r["results"].map{|d| d["_id"]}.should == [100, 200]
+        MopedMapping.collection_map(@database_name,{"places" => "places@2" }) do
+          r = @session.command({geoSearch: "places",
+                       search: { type: "restaurant" },
+                       near: target,
+                       maxDistance: 10 })
+          r["ok"].should == 1
+          r["results"].map{|d| d["_id"]}.should == [200]
+        end
+        r = @session.command({geoSearch: "places",
+                     search: { type: "restaurant" },
+                     near: target,
+                     maxDistance: 10 })
+        r["ok"].should == 1
+        r["results"].map{|d| d["_id"]}.should == [100, 200]
       end
     end
   end
