@@ -25,7 +25,7 @@ module MopedMapping
       # #aggregation-commands
       :count, :aggregate, :distinct, # group # mapReduce
       # #geospatial-commands
-      :geoNear, :geoSearch, :geoWalk,
+      :geoNear, :geoSearch, # :geoWalk,
       # #query-and-write-operation-commands
       :findAndModify, # text
       # #replication-commands
