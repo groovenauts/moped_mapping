@@ -26,7 +26,7 @@ module MopedMapping
 
 
   def db_collection_map
-    @db_collection_map ||= {}
+    Thread.current[:MopedMapping_db_collection_map] ||= {}
   end
 
   def mapped_name(database, collection)
