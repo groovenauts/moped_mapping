@@ -5,7 +5,7 @@ module MopedMapping
   module SessionContextExt
     def self.included(klass)
       klass.module_eval do
-        %w[query insert update command].each do |m|
+        %w[query insert update remove command].each do |m|
           alias_method :"#{m}_without_mapping", m.to_sym
           alias_method m.to_sym, :"#{m}_with_mapping"
         end
@@ -25,6 +25,11 @@ module MopedMapping
     def update_with_mapping(database, collection, selector, change, options = {}, &block)
       collection = MopedMapping.mapped_name(database, collection)
       return update_without_mapping(database, collection, selector, change, options, &block)
+    end
+
+    def remove_with_mapping(database, collection, selector, options = {}, &block)
+      collection = MopedMapping.mapped_name(database, collection)
+      return remove_without_mapping(database, collection, selector, options, &block)
     end
 
     # MongoDBのコマンド一覧

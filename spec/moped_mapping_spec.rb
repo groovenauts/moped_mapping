@@ -464,4 +464,118 @@ describe MopedMapping do
 
   end
 
+
+  describe :remove do
+    it "match just one" do
+      MopedMapping.enable
+      col = @session["items"]
+      MopedMapping.collection_map(@database_name,{"items" => "items@1" }) do
+        col.find(name: "foo").remove
+      end
+      MopedMapping.disable do
+        @session["items"  ].find.count.should == 1
+        @session["items@1"].find.count.should == 2
+        @session["items@2"].find.count.should == 4
+        @session["items@3"].find.count.should == 3
+      end
+      MopedMapping.collection_map(@database_name,{"items" => "items@2" }) do
+        col.find(name: "foo").remove
+      end
+      MopedMapping.disable do
+        @session["items"  ].find.count.should == 1
+        @session["items@1"].find.count.should == 2
+        @session["items@2"].find.count.should == 3
+        @session["items@3"].find.count.should == 3
+      end
+      MopedMapping.collection_map(@database_name,{"items" => "items@3" }) do
+        col.find(name: "foo").remove
+      end
+      MopedMapping.disable do
+        @session["items"  ].find.count.should == 1
+        @session["items@1"].find.count.should == 2
+        @session["items@2"].find.count.should == 3
+        @session["items@3"].find.count.should == 3
+      end
+    end
+
+    it "match some documents and does not use remove_all but remove" do
+      MopedMapping.disable do
+        @session["items"  ].find.count.should == 1
+        @session["items@1"].find.count.should == 3
+        @session["items@2"].find.count.should == 4
+        @session["items@3"].find.count.should == 3
+      end
+      MopedMapping.enable
+      col = @session["items"]
+      cond = { price: {"$gte" => 100, "$lte" => 350} }
+      MopedMapping.collection_map(@database_name,{"items" => "items@1" }) do
+        col.find(cond).remove
+      end
+      MopedMapping.disable do
+        @session["items"  ].find.count.should == 1
+        @session["items@1"].find.count.should == 2
+        @session["items@2"].find.count.should == 4
+        @session["items@3"].find.count.should == 3
+      end
+      MopedMapping.collection_map(@database_name,{"items" => "items@2" }) do
+        col.find(cond).remove
+      end
+      MopedMapping.disable do
+        @session["items"  ].find.count.should == 1
+        @session["items@1"].find.count.should == 2
+        @session["items@2"].find.count.should == 3
+        @session["items@3"].find.count.should == 3
+      end
+      MopedMapping.collection_map(@database_name,{"items" => "items@3" }) do
+        col.find(cond).remove
+      end
+      MopedMapping.disable do
+        @session["items"  ].find.count.should == 1
+        @session["items@1"].find.count.should == 2
+        @session["items@2"].find.count.should == 3
+        @session["items@3"].find.count.should == 2
+      end
+    end
+
+    it "match some documents and use remove_all" do
+      MopedMapping.disable do
+        @session["items"  ].find.count.should == 1
+        @session["items@1"].find.count.should == 3
+        @session["items@2"].find.count.should == 4
+        @session["items@3"].find.count.should == 3
+      end
+      MopedMapping.enable
+      col = @session["items"]
+      cond = { price: {"$gte" => 100, "$lte" => 350} }
+      MopedMapping.collection_map(@database_name,{"items" => "items@1" }) do
+        col.find(cond).remove_all
+      end
+      MopedMapping.disable do
+        @session["items"  ].find.count.should == 1
+        @session["items@1"].find.count.should == 2
+        @session["items@2"].find.count.should == 4
+        @session["items@3"].find.count.should == 3
+      end
+      MopedMapping.collection_map(@database_name,{"items" => "items@2" }) do
+        col.find(cond).remove_all
+      end
+      MopedMapping.disable do
+        @session["items"  ].find.count.should == 1
+        @session["items@1"].find.count.should == 2
+        @session["items@2"].find.count.should == 1
+        @session["items@3"].find.count.should == 3
+      end
+      MopedMapping.collection_map(@database_name,{"items" => "items@3" }) do
+        col.find(cond).remove_all
+      end
+      MopedMapping.disable do
+        @session["items"  ].find.count.should == 1
+        @session["items@1"].find.count.should == 2
+        @session["items@2"].find.count.should == 1
+        @session["items@3"].find.count.should == 1
+      end
+    end
+
+  end
+
 end
