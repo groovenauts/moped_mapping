@@ -274,4 +274,21 @@ describe MopedMapping do
   end
 
 
+  describe :find_with_cursor do
+    it do
+      MopedMapping.enable
+      col = @session["items"]
+      cond = { price: {"$gte" => 100, "$lte" => 350} }
+      MopedMapping.collection_map(@database_name,{"items" => "items@1" }) do
+        col.find(cond).sort(price: 1).map{|r| r["name"]}.should == %w[bar]
+      end
+      MopedMapping.collection_map(@database_name,{"items" => "items@2" }) do
+        col.find(cond).sort(price: 1).map{|r| r["name"]}.should == %w[qux bar baz]
+      end
+      MopedMapping.collection_map(@database_name,{"items" => "items@3" }) do
+        col.find(cond).sort(price: 1).map{|r| r["name"]}.should == %w[bar baz]
+      end
+    end
+  end
+
 end

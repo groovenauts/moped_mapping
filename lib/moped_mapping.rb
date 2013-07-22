@@ -64,6 +64,8 @@ end
 
 require "moped_mapping/session_context_ext"
 require "moped_mapping/indexes_ext"
+require "moped_mapping/node_ext"
 
 Moped::Session::Context.send(:include, MopedMapping::SessionContextExt)
 Moped::Indexes.send(:include, MopedMapping::IndexesExt)
+Moped::Node.send(:include, MopedMapping::NodeExt)
