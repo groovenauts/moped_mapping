@@ -273,6 +273,16 @@ describe MopedMapping do
     end
   end
 
+  def assert_item_prices(col, name_to_prices)
+    name_to_prices.each do  |k,v|
+      begin
+        @session[col].find(name: k).one["price"].should == v
+      rescue
+        puts "[#{col}] #{k} => #{v}"
+        raise
+      end
+    end
+  end
 
   describe :find_with_cursor do
     it do
@@ -382,17 +392,6 @@ describe MopedMapping do
           hash.each do  |k,v|
             @session[col].find(name: k).one["price"].should == v
           end
-        end
-      end
-    end
-
-    def assert_item_prices(col, name_to_prices)
-      name_to_prices.each do  |k,v|
-        begin
-          @session[col].find(name: k).one["price"].should == v
-        rescue
-          puts "[#{col}] #{k} => #{v}"
-          raise
         end
       end
     end
