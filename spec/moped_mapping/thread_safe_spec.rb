@@ -69,6 +69,44 @@ describe MopedMapping do
       query_thread.join
       insert_thread.join
     end
+
+
+    it "query@1 and insert@2 parallel with default collection_map defined in main thread" do
+      MopedMapping.collection_map(@database_name,{"test_logs" => "test_logs@1" })
+      MopedMapping.enable
+      database_name = config[:sessions][:default][:database]
+      run_insert = true
+      query_thread = Thread.new do
+        session1 = Moped::Session.new(config[:sessions][:default][:hosts])
+        session1.use(database_name)
+        1000.times do
+          Thread.pass
+          begin
+            col = session1["test_logs"]
+            r = col.find.count
+            r.should == 4
+          rescue
+            run_insert = false
+            raise
+          end
+        end
+      end
+
+      insert_thread = Thread.new do
+        MopedMapping.collection_map(@database_name,{"test_logs" => "test_logs@2" }) do
+          session2 = Moped::Session.new(config[:sessions][:default][:hosts])
+          session2.use(database_name)
+          1000.times do |idx|
+            Thread.pass
+            break unless run_insert
+            col = session2["test_logs"]
+            col.insert(num: idx + 2)
+          end
+        end
+      end
+      query_thread.join
+      insert_thread.join
+    end
   end
 
 end

@@ -26,7 +26,16 @@ module MopedMapping
 
 
   def db_collection_map
-    Thread.current[:MopedMapping_db_collection_map] ||= {}
+    t = Thread.current
+    result = t[:MopedMapping_db_collection_map]
+    unless result
+      result = nil
+      result = Thread.main[:MopedMapping_db_collection_map] unless t == Thread.main
+      result = result.dup if result
+      result ||= {}
+      t[:MopedMapping_db_collection_map] = result
+    end
+    result
   end
 
   def mapped_name(database, collection)
