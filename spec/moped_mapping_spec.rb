@@ -291,4 +291,178 @@ describe MopedMapping do
     end
   end
 
+
+  describe :update do
+    it "match just one" do
+      MopedMapping.enable
+      col = @session["items"]
+      change = {"$inc" => {price: 30}}
+      MopedMapping.collection_map(@database_name,{"items" => "items@1" }) do
+        col.find(name: "foo").update(change)
+      end
+      MopedMapping.disable do
+        @session["items"  ].find(name: "foo").one["price"].should == 100
+        @session["items@1"].find(name: "foo").one["price"].should == 120
+        @session["items@2"].find(name: "foo").one["price"].should == 80
+        @session["items@3"].find(name: "foo").one.should == nil
+      end
+      MopedMapping.collection_map(@database_name,{"items" => "items@2" }) do
+        col.find(name: "foo").update(change)
+      end
+      MopedMapping.disable do
+        @session["items"  ].find(name: "foo").one["price"].should == 100
+        @session["items@1"].find(name: "foo").one["price"].should == 120
+        @session["items@2"].find(name: "foo").one["price"].should == 110
+        @session["items@3"].find(name: "foo").one.should == nil
+      end
+      MopedMapping.collection_map(@database_name,{"items" => "items@3" }) do
+        col.find(name: "foo").update(change)
+      end
+      MopedMapping.disable do
+        @session["items"  ].find(name: "foo").one["price"].should == 100
+        @session["items@1"].find(name: "foo").one["price"].should == 120
+        @session["items@2"].find(name: "foo").one["price"].should == 110
+        @session["items@3"].find(name: "foo").one.should == nil
+      end
+    end
+
+    it "match some documents and does not use update_all but update" do
+      MopedMapping.disable do
+        {
+          "items@1" => {"foo" =>  90, "bar" => 200, "baz" => 400},
+          "items@2" => {"foo" =>  80, "bar" => 180, "baz" => 350, "qux" => 150},
+          "items@3" => {              "bar" => 180, "baz" => 350, "qux" => 400},
+        }.each do |col, hash|
+          hash.each do  |k,v|
+            @session[col].find(name: k).one["price"].should == v
+          end
+        end
+      end
+      MopedMapping.enable
+      col = @session["items"]
+      cond = { price: {"$gte" => 100, "$lte" => 350} }
+      change = {"$inc" => {price: 30}}
+      MopedMapping.collection_map(@database_name,{"items" => "items@1" }) do
+        col.find(cond).update(change)
+      end
+      MopedMapping.disable do
+        {
+          "items@1" => {"foo" =>  90, "bar" => 230, "baz" => 400},
+          "items@2" => {"foo" =>  80, "bar" => 180, "baz" => 350, "qux" => 150},
+          "items@3" => {              "bar" => 180, "baz" => 350, "qux" => 400},
+        }.each do |col, hash|
+          hash.each do  |k,v|
+            @session[col].find(name: k).one["price"].should == v
+          end
+        end
+      end
+      MopedMapping.collection_map(@database_name,{"items" => "items@2" }) do
+        col.find(cond).update(change)
+      end
+      MopedMapping.disable do
+        {
+          "items@1" => {"foo" =>  90, "bar" => 230, "baz" => 400},
+          "items@2" => {"foo" =>  80, "bar" => 210, "baz" => 350, "qux" => 150},
+          "items@3" => {              "bar" => 180, "baz" => 350, "qux" => 400},
+        }.each do |col, hash|
+          hash.each do  |k,v|
+            @session[col].find(name: k).one["price"].should == v
+          end
+        end
+      end
+      MopedMapping.collection_map(@database_name,{"items" => "items@3" }) do
+        col.find(cond).update(change)
+      end
+      MopedMapping.disable do
+        {
+          "items@1" => {"foo" =>  90, "bar" => 230, "baz" => 400},
+          "items@2" => {"foo" =>  80, "bar" => 210, "baz" => 350, "qux" => 150},
+          "items@3" => {              "bar" => 210, "baz" => 350, "qux" => 400},
+        }.each do |col, hash|
+          hash.each do  |k,v|
+            @session[col].find(name: k).one["price"].should == v
+          end
+        end
+      end
+    end
+
+    def assert_item_prices(col, name_to_prices)
+      name_to_prices.each do  |k,v|
+        begin
+          @session[col].find(name: k).one["price"].should == v
+        rescue
+          puts "[#{col}] #{k} => #{v}"
+          raise
+        end
+      end
+    end
+
+    it "match some documents and use update" do
+      MopedMapping.disable do
+        assert_item_prices "items@1", {"foo" =>  90, "bar" => 200, "baz" => 400}
+        assert_item_prices "items@2", {"foo" =>  80, "bar" => 180, "baz" => 350, "qux" => 150}
+        assert_item_prices "items@3", {              "bar" => 180, "baz" => 350, "qux" => 400}
+      end
+      MopedMapping.enable
+      col = @session["items"]
+      cond = { price: {"$gte" => 100, "$lte" => 350} }
+      change = {"$inc" => {price: 30}}
+      MopedMapping.collection_map(@database_name,{"items" => "items@1" }) do
+        col.find(cond).update_all(change)
+      end
+      MopedMapping.disable do
+        assert_item_prices "items@1", {"foo" =>  90, "bar" => 230, "baz" => 400}
+        assert_item_prices "items@2", {"foo" =>  80, "bar" => 180, "baz" => 350, "qux" => 150}
+        assert_item_prices "items@3", {              "bar" => 180, "baz" => 350, "qux" => 400}
+      end
+      MopedMapping.collection_map(@database_name,{"items" => "items@2" }) do
+        col.find(cond).update_all(change)
+      end
+      MopedMapping.disable do
+        assert_item_prices "items@1", {"foo" =>  90, "bar" => 230, "baz" => 400}
+        assert_item_prices "items@2", {"foo" =>  80, "bar" => 210, "baz" => 380, "qux" => 180}
+        assert_item_prices "items@3", {              "bar" => 180, "baz" => 350, "qux" => 400}
+      end
+      MopedMapping.collection_map(@database_name,{"items" => "items@3" }) do
+        col.find(cond).update_all(change)
+      end
+      MopedMapping.disable do
+        assert_item_prices "items@1", {"foo" =>  90, "bar" => 230, "baz" => 400}
+        assert_item_prices "items@2", {"foo" =>  80, "bar" => 210, "baz" => 380, "qux" => 180}
+        assert_item_prices "items@3", {              "bar" => 210, "baz" => 380, "qux" => 400}
+      end
+    end
+
+    it "match just one and upsert" do
+      MopedMapping.enable
+      col = @session["items"]
+      change = {name: "foo", price: 60}
+      MopedMapping.collection_map(@database_name,{"items" => "items@1" }) do
+        col.find(name: "foo").upsert(change)
+      end
+      MopedMapping.disable do
+        assert_item_prices "items@1", {"foo" =>  60, "bar" => 200, "baz" => 400}
+        assert_item_prices "items@2", {"foo" =>  80, "bar" => 180, "baz" => 350, "qux" => 150}
+        assert_item_prices "items@3", {              "bar" => 180, "baz" => 350, "qux" => 400}
+      end
+      MopedMapping.collection_map(@database_name,{"items" => "items@2" }) do
+        col.find(name: "foo").upsert(change)
+      end
+      MopedMapping.disable do
+        assert_item_prices "items@1", {"foo" =>  60, "bar" => 200, "baz" => 400}
+        assert_item_prices "items@2", {"foo" =>  60, "bar" => 180, "baz" => 350, "qux" => 150}
+        assert_item_prices "items@3", {              "bar" => 180, "baz" => 350, "qux" => 400}
+      end
+      MopedMapping.collection_map(@database_name,{"items" => "items@3" }) do
+        col.find(name: "foo").upsert(change)
+      end
+      MopedMapping.disable do
+        assert_item_prices "items@1", {"foo" =>  60, "bar" => 200, "baz" => 400}
+        assert_item_prices "items@2", {"foo" =>  60, "bar" => 180, "baz" => 350, "qux" => 150}
+        assert_item_prices "items@3", {"foo" =>  60, "bar" => 180, "baz" => 350, "qux" => 400}
+      end
+    end
+
+  end
+
 end
