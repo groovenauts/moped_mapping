@@ -396,7 +396,7 @@ describe MopedMapping do
       end
     end
 
-    it "match some documents and use update" do
+    it "match some documents and use update_all" do
       MopedMapping.disable do
         assert_item_prices "items@1", {"foo" =>  90, "bar" => 200, "baz" => 400}
         assert_item_prices "items@2", {"foo" =>  80, "bar" => 180, "baz" => 350, "qux" => 150}
