@@ -250,4 +250,28 @@ describe MopedMapping do
     end
   end
 
+
+  describe :find_one do
+    it do
+      MopedMapping.disable do
+        @session["items"  ].find(name: "foo").one["price"].should == 100
+        @session["items@1"].find(name: "foo").one["price"].should == 90
+        @session["items@2"].find(name: "foo").one["price"].should == 80
+        @session["items@3"].find(name: "foo").one.should == nil
+      end
+      MopedMapping.enable
+      col = @session["items"]
+      MopedMapping.collection_map(@database_name,{"items" => "items@1" }) do
+        col.find(name: "foo").one["price"].should == 90
+      end
+      MopedMapping.collection_map(@database_name,{"items" => "items@2" }) do
+        col.find(name: "foo").one["price"].should == 80
+      end
+      MopedMapping.collection_map(@database_name,{"items" => "items@3" }) do
+        col.find(name: "foo").one.should == nil
+      end
+    end
+  end
+
+
 end
