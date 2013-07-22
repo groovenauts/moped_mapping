@@ -1,6 +1,6 @@
 # MopedMapping
 
-TODO: Write a gem description
+moped extension library to switch collection.
 
 ## Installation
 
@@ -18,7 +18,23 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+### Global switch
+
+#### configuration
+
+```
+MopedMapping.enable
+```
+
+#### each action
+
+```
+MopedMapping.collection_map(@database_name,{"items" => "items@3" }) do
+  # actually this document will be inserted into items@3
+  session["items"].insert({some: "document"})
+end
+```
+
 
 ## Contributing
 
@@ -27,3 +43,9 @@ TODO: Write usage instructions here
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create new Pull Request
+
+## License
+
+GPLv3
+
+Copyright (C) 2013  Groovenauts, inc.
