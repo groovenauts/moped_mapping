@@ -228,6 +228,11 @@ describe MopedMapping do
   describe :insert do
     it do
       MopedMapping.collection_map(@database_name,{"items" => "items@2" })
+      MopedMapping.disable do
+        @session["items"].find.count.should == 1
+        @session["items@2"].find.count.should == 4
+        @session["items@3"].find.count.should == 3
+      end
       MopedMapping.enable
       col = @session["items"]
       col.find.count.should == 4
@@ -241,24 +246,6 @@ describe MopedMapping do
       end
       MopedMapping.collection_map(@database_name,{"items" => "items@3" }) do
         @session["items"].find.count.should == 3
-      end
-    end
-  end
-
-  describe :update do
-    it do
-      pending "実装中"
-      MopedMapping.collection_map(@database_name,{"items" => "items@2" })
-      MopedMapping.enable
-      col = @session["items"]
-      col.find({name: "foo"}).one.should == {}
-      col.find({"name" => "qux"}).update({"price" => 450})
-      MopedMapping.disable do
-        @session["items@2"].find({name: "qux"}).to_a.should == []
-        @session["items@2"].find({name: "qux"}).one["price"].should == 450
-        @session["items@3"].find({name: "qux"}).one["price"].should == 400
-      end
-      MopedMapping.collection_map(@database_name,{"items" => "items@3" }) do
       end
     end
   end
