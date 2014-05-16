@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require "moped_mapping/version"
 
 require 'moped'
@@ -36,6 +37,20 @@ module MopedMapping
       t[:MopedMapping_db_collection_map] = result
     end
     result
+  end
+
+  # mainスレッド以外からmainスレッドのデータを書き換えるときに使用します
+  def update_main_collection_map(db_name, mapping)
+    Mutex.new.synchronize do
+      mt = Thread.main
+      mt[:MopedMapping_db_collection_map] ||= {}
+      mt[:MopedMapping_db_collection_map][db_name] = mapping
+      ct = Thread.current
+      unless ct == mt
+        ct[:MopedMapping_db_collection_map] ||= {}
+        ct[:MopedMapping_db_collection_map][db_name] = mapping
+      end
+    end
   end
 
   def mapped_name(database, collection)

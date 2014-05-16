@@ -82,7 +82,59 @@ describe MopedMapping do
         col.find.count.should == 3
       end
     end
+
+    it "update thread local mapping" do
+      MopedMapping.collection_map(@database_name,{"items" => "items@2" })
+      MopedMapping.enable
+
+      expect(MopedMapping.db_collection_map[@database_name]["items"]).to eq "items@2"
+
+      t = Thread.new do
+        expect(MopedMapping.db_collection_map[@database_name]["items"]).to eq "items@2"
+        MopedMapping.collection_map(@database_name, {"items" => "items@3"})
+        expect(MopedMapping.db_collection_map[@database_name]["items"]).to eq "items@3"
+        Thread.pass
+      end
+      t.join
+
+      MopedMapping.update_main_collection_map(@database_name, {"items" => "items@2"})
+
+      t = Thread.new do
+        MopedMapping.update_main_collection_map(@database_name, {"items" => "items@2"})
+        Thread.pass
+      end
+      t.join
+
+    end
+
   end
+
+  describe :update_main_collection_map do
+    it "update main mapping" do
+      MopedMapping.collection_map(@database_name,{"items" => "items@2" })
+      MopedMapping.enable
+
+      expect(MopedMapping.db_collection_map[@database_name]["items"]).to eq "items@2"
+
+      t = Thread.new do
+        expect(MopedMapping.db_collection_map[@database_name]["items"]).to eq "items@2"
+        MopedMapping.update_main_collection_map(@database_name, {"items" => "items@3"})
+        expect(MopedMapping.db_collection_map[@database_name]["items"]).to eq "items@3"
+        Thread.pass
+      end
+      t.join
+
+      MopedMapping.update_main_collection_map(@database_name, {"items" => "items@3"})
+
+      t = Thread.new do
+        MopedMapping.update_main_collection_map(@database_name, {"items" => "items@3"})
+        Thread.pass
+      end
+      t.join
+
+    end
+  end
+
 
   describe :create do
     it "actual usage" do
